@@ -1,0 +1,7 @@
+#+TITLE: readme
+#+AUTHOR: David S.
+#+DATE: <2023-08-29 Tue>
+
+* k3s.org
+
+notes for [[https://github.com/k3s-io/k3s/][k3s]]
