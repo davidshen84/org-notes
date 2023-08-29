@@ -6,6 +6,7 @@
 - cofigure your ssh and make sure it is secure
 - some of the code blocks are executed with *root privilege*
 - some of the babel blocks are tangled with *root privilege*
+- ~kubectl apply~ commands are protected by the ~--dry-run~ option
 
 * installation
 https://docs.k3s.io/
@@ -14,7 +15,7 @@ https://docs.k3s.io/
 
 If you are in a virtual envirnment, like WSL, the cluster should
 advise the IP address of the hosting environment to the agents. Set
-the `node-external-ip` to the hosting machine's IP address.
+the ~node-external-ip~ to the hosting machine's IP address.
 
 #+name: server-config
 #+begin_src yaml :mkdirp yes :tangle /sudo::/etc/rancher/k3s/config.yaml :comments link
@@ -59,7 +60,7 @@ https://github.com/NVIDIA/k8s-device-plugin/
 
 You need to install [[https://github.com/NVIDIA/k8s-device-plugin/#install-the-nvidia-container-toolkit][the toolkit]] first.
 
-Install `helm` and add these *hel-repo*.
+Install ~helm~ and add these *hel-repo*.
 #+begin_src shell :results output
   helm repo add nvdp https://nvidia.github.io/k8s-device-plugin
   helm repo add nvgfd https://nvidia.github.io/gpu-feature-discovery
@@ -84,15 +85,6 @@ Install `helm` and add these *hel-repo*.
   EOF
 #+end_src
 
-#+RESULTS:
-: Release "nvdp" has been upgraded. Happy Helming!
-: NAME: nvdp
-: LAST DEPLOYED: Tue Aug 29 11:29:09 2023
-: NAMESPACE: nvidia-device-plugin
-: STATUS: deployed
-: REVISION: 2
-: TEST SUITE: None
-
 #+begin_src shell :results output :wrap src yaml
   helm show values nvdp/nvidia-device-plugin --version 0.14.1
 #+end_src
@@ -104,10 +96,6 @@ https://github.com/NVIDIA/gpu-feature-discovery/
   helm search repo nvgfd
 #+end_src
 
-#+RESULTS:
-| NAME                        | CHART VERSION | APP VERSION | DESCRIPTION                                        |
-| nvgfd/gpu-feature-discovery |         0.8.1 |       0.8.1 | A Helm chart for gpu-feature-discovery on Kuber... |
-
 #+begin_src shell :results output :wrap src yaml
   helm show values nvgfd/gpu-feature-discovery --version 0.8.1
 #+end_src
@@ -117,15 +105,6 @@ https://github.com/NVIDIA/gpu-feature-discovery/
        nvgfd/gpu-feature-discovery --version 0.8.1 \
        --namespace gpu-feature-discovery --create-namespace
 #+end_src
-
-#+RESULTS:
-: Release "nvgfd" does not exist. Installing it now.
-: NAME: nvgfd
-: LAST DEPLOYED: Tue Aug 29 11:40:49 2023
-: NAMESPACE: gpu-feature-discovery
-: STATUS: deployed
-: REVISION: 1
-: TEST SUITE: None
 
 * tests
 
@@ -155,13 +134,10 @@ https://github.com/NVIDIA/gpu-feature-discovery/
 #+end_src
 
 #+begin_src shell :noweb yes
-  cat<<EOF | kubectl apply --dry-run=client -f- 
+  cat<<EOF | kubectl apply -f- --dry-run=client
   <<test-deployment>>
   EOF
 #+end_src
-
-#+RESULTS:
-: deployment.apps/hello-world created (dry run)
 
 #+name: gpu-test
 #+begin_src yaml
@@ -188,10 +164,7 @@ https://github.com/NVIDIA/gpu-feature-discovery/
 #+end_src
 
 #+begin_src shell :noweb yes results: output
-  cat<<EOF | kubectl apply -f -
+  cat<<EOF | kubectl apply -f - --dry-run=client
   <<gpu-test>>
   EOF
 #+end_src
-
-#+RESULTS:
-: pod/nbody-gpu-benchmark created
