@@ -1,10 +1,16 @@
-* [[https://istio.io/][istio]]
+#+TITLE: istio
+#+STARTUP: showall hideblocks
+
+* istio
+https://istio.io/
 
 #+begin_src shell :results output
   istioctl profile list 2>&1
 #+end_src
 
-** [[https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/][istio-operator]]
+** istio-operator
+https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/
+
 #+begin_src shell :results output :wrap src yaml
   istioctl profile dump default
 #+end_src

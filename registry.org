@@ -1,5 +1,16 @@
-* [[https://hub.docker.com/_/registry][registry]]
+#+TITLE: container registry
+#+STARTUP: showall hideblocks
 
+* registry
+** TODO tasks [0/1]
+- [ ] configure url prefix
+
+** links
+- https://hub.docker.com/_/registry
+
+- https://docs.docker.com/registry/configuration/
+
+** define resources
 - Deploy a local container registry
 - Define a host PVC
 
