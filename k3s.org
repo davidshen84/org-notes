@@ -8,8 +8,7 @@
 - some of the babel blocks are tangled with *root privilege*
 - ~kubectl apply~ commands are protected by the ~--dry-run~ option
 
-* installation
-https://docs.k3s.io/
+* [[https://docs.k3s.io/][installation]]
 
 ** server
 
@@ -42,8 +41,7 @@ the ~node-external-ip~ to the hosting machine's IP address.
       INSTALL_K3S_EXEC="agent" sh -s -
 #+end_src
 
-* nvidia runtime
-https://docs.k3s.io/advanced#nvidia-container-runtime-support
+* [[https://docs.k3s.io/advanced#nvidia-container-runtime-support][nvidia runtime]]
 
 Only install this component on the *server* side.
 
@@ -55,8 +53,7 @@ Only install this component on the *server* side.
   handler: nvidia
 #+end_src
 
-** k8s-device-plugin
-https://github.com/NVIDIA/k8s-device-plugin/
+** [[https://github.com/NVIDIA/k8s-device-plugin/][k8s-device-plugin]]
 
 You need to install [[https://github.com/NVIDIA/k8s-device-plugin/#install-the-nvidia-container-toolkit][the toolkit]] first.
 
@@ -89,8 +86,7 @@ Install ~helm~ and add these *hel-repo*.
   helm show values nvdp/nvidia-device-plugin --version 0.14.1
 #+end_src
 
-** gpu-feature-discovery
-https://github.com/NVIDIA/gpu-feature-discovery/
+** [[https://github.com/NVIDIA/gpu-feature-discovery/][gpu-feature-discovery]]
 
 #+begin_src shell
   helm search repo nvgfd
