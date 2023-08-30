@@ -31,6 +31,10 @@ the ~node-external-ip~ to the hosting machine's IP address.
   curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server" sh -s -
 #+end_src
 
+#+begin_src shell :results output :wrap src yaml
+  yq '.contexts[0].name = "k3s"' /etc/rancher/k3s/k3s.yaml | tee ~/.kube/k3s.yaml
+#+end_src
+
 ** agent
 #+name: agent-config
 #+begin_src yaml :mkdirp yes :tangle /ssh:gentoo|sudo:gentoo:/etc/rancher/k3s/config.yaml :comments link
