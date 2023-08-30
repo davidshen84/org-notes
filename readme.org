@@ -2,8 +2,12 @@
 #+AUTHOR: David S.
 #+DATE: <2023-08-29 Tue>
 
-* notes
+* notes [3/5]
 
-- [[./k3s.org][k3s.org]]
-- [[./istio.org][istio.org]]
-- [[./registry.org][registry.org]]
+- [X] [[./k3s.org][k3s.org]]
+- [X] [[./istio.org][istio.org]]
+- [X] [[./registry.org][registry.org]]
+- [ ] argocd.org
+- [ ] juypter lab
+  - https://jupyter-docker-stacks.readthedocs.io/en/latest/using/selecting.html#jupyter-tensorflow-notebook
+  - https://www.tensorflow.org/install/docker
