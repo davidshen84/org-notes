@@ -1,0 +1,77 @@
+* [[https://hub.docker.com/_/registry][registry]]
+
+- Deploy a local container registry
+- Define a host PVC
+
+#+name: registry
+#+begin_src yaml
+  apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: registry-storage
+  spec:
+    accessModes:
+      - ReadWriteOnce
+    storageClassName: local-path
+    resources:
+      requests:
+        storage: 10Gi
+  ---
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: registry
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: registry
+    template:
+      metadata:
+        labels:
+          app: registry
+      spec:
+        containers:
+          - name: registry
+            image: registry:2
+            ports:
+              - containerPort: 5000
+            volumeMounts:
+              - name: registry
+                mountPath: /var/lib/registry
+            env:
+              - name: REGISTRY_HTTP_ADDR
+                value: :5000
+              - name: REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY
+                value: /var/lib/registry
+              - name: REGISTRY_HTTP_SECRET
+                value: secret
+        volumes:
+          - name: registry
+            persistentVolumeClaim:
+              claimName: registry-storage
+  ---
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: registry
+  spec:
+    selector:
+      app: registry
+    ports:
+      - protocol: TCP
+        port: 5000
+        targetPort: 5000
+#+end_src
+
+#+begin_src shell :results verbatim :noweb yes
+  cat<<EOF | kubectl --context k3s --namespace default apply --filename - --dry-run=server
+  <<registry>>
+  EOF
+#+end_src
+
+#+RESULTS:
+: persistentvolumeclaim/registry-storage unchanged (server dry run)
+: deployment.apps/registry unchanged (server dry run)
+: service/registry unchanged (server dry run)
+
