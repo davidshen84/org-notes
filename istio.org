@@ -185,13 +185,29 @@ change log:
 
 #+end_src
 
-#+RESULTS:
-: 
-: - Processing resources for Istio core.
-: ✔ Istio core installed
-: - Processing resources for Istiod.
-: ✔ Istiod installed
-: - Processing resources for Ingress gateways.
-: ✔ Ingress gateways installed
-: - Pruning removed resources
-: ✔ Installation completeMaking this installation the default for injection and validation.
+** default gateway
+#+name: gateway
+#+begin_src yaml
+  apiVersion: networking.istio.io/v1beta1
+  kind: Gateway
+  metadata:
+    name: gateway
+    namespace: default
+  spec:
+    selector:
+      istio: ingressgateway
+    servers:
+      - port:
+          number: 80
+          name: http
+          protocol: HTTP
+        hosts:
+          - local.wsl
+#+end_src
+
+#+begin_src shell :noweb yes
+  cat<<EOF | kubectl apply --filename - --dry-run=server
+  <<gateway>>
+  EOF
+#+end_src
+
