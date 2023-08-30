@@ -70,8 +70,35 @@
   EOF
 #+end_src
 
-#+RESULTS:
-: persistentvolumeclaim/registry-storage unchanged (server dry run)
-: deployment.apps/registry unchanged (server dry run)
-: service/registry unchanged (server dry run)
+* istio configuration
 
+** virtual service
+#+name: registry-service
+#+begin_src yaml
+  apiVersion: networking.istio.io/v1beta1
+  kind: VirtualService
+  metadata:
+    name: registry
+  spec:
+    hosts:
+      - local.wsl
+    gateways:
+      - default/gateway
+    http:
+      - match:
+          - uri:
+              prefix: /registry/
+        rewrite:
+          uri: /
+        route:
+          - destination:
+              host: registry.default.svc.cluster.local
+              port:
+                number: 5000
+#+end_src
+
+#+begin_src shell :noweb yes
+  cat<<EOF | kubectl apply --namespace default --filename - --dry-run=server
+  <<registry-service>>
+  EOF
+#+end_src
