@@ -43,8 +43,7 @@ the ~node-external-ip~ to the hosting machine's IP address.
 #+end_src
 
 #+begin_src shell :dir /ssh:gentoo|sudo:gentoo:~/ :results verbatim
-  curl -sfL https://get.k3s.io | \
-      INSTALL_K3S_EXEC="agent" sh -s -
+  curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="agent" sh -s -
 #+end_src
 
 * nvidia runtime
@@ -172,4 +171,31 @@ https://github.com/NVIDIA/gpu-feature-discovery/
   cat<<EOF | kubectl apply -f - --dry-run=client
   <<gpu-test>>
   EOF
+#+end_src
+
+#+name: dnsutils
+#+begin_src yaml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: dnsutils
+    namespace: default
+  spec:
+    nodeSelector:
+      kubernetes.io/hostname: gentoo
+    containers:
+    - name: dnsutils
+      image: registry.k8s.io/e2e-test-images/jessie-dnsutils:1.3
+      command:
+        - sleep
+        - "infinity"
+      imagePullPolicy: IfNotPresent
+    restartPolicy: Always
+#+end_src
+
+#+begin_src shell :noweb yes
+  cat<<EOF | kubectl apply --namespace default --filename -
+  <<dnsutils>>
+  EOF
+
 #+end_src
