@@ -24,7 +24,10 @@ the ~node-external-ip~ to the hosting machine's IP address.
   disable:
     - traefik
   node-external-ip: 192.168.86.109
+  advertise-address: 192.168.86.109
   token: k3s-home
+  tls-san:
+    - 192.168.86.109
 #+end_src
 
 #+begin_src shell :dir /sudo::/root :results output
