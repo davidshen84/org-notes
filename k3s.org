@@ -18,6 +18,10 @@ If you are in a virtual envirnment, like WSL, the cluster should
 advise the IP address of the hosting environment to the agents. Set
 the ~node-external-ip~ to the hosting machine's IP address.
 
+To use ~wireguard-native~, all the nodes must be able to connect
+through a wireguard vpn. This requires the kernels of all the nodes
+have the nesessary kernel features enabled.
+
 #+name: server-config
 #+begin_src yaml :mkdirp yes :tangle /sudo::/etc/rancher/k3s/config.yaml :comments link
   write-kubeconfig-mode: "0644"
@@ -28,6 +32,8 @@ the ~node-external-ip~ to the hosting machine's IP address.
   token: k3s-home
   tls-san:
     - 192.168.86.109
+  flannel-backend: wireguard-native
+  flannel-external-ip: true
 #+end_src
 
 #+begin_src shell :dir /sudo::/root :results output
@@ -110,41 +116,10 @@ https://github.com/NVIDIA/gpu-feature-discovery/
 #+begin_src shell :results output
   helm upgrade --install nvgfd \
        nvgfd/gpu-feature-discovery --version 0.8.1 \
-       --namespace gpu-feature-discovery --create-namespace
+       --namespace gpu-feature-discovery --create-namespace --dry-run
 #+end_src
 
 * tests
-
-#+NAME: test-deployment
-#+begin_src yaml
-  apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: hello-world
-  spec:
-    replicas: 1
-    selector:
-      matchLabels:
-        app: hello-world
-    template:
-      metadata:
-        labels:
-          app: hello-world
-      spec:
-        nodeSelector:
-          kubernetes.io/hostname=desktop-0xivd7b-wsl
-        containers:
-        - name: hello-world
-          image: busybox
-          command: ["sh", "-c", "echo 'Hello, world!'"]
-
-#+end_src
-
-#+begin_src shell :noweb yes
-  cat<<EOF | kubectl apply -f- --dry-run=client
-  <<test-deployment>>
-  EOF
-#+end_src
 
 #+name: gpu-test
 #+begin_src yaml
@@ -156,6 +131,8 @@ https://github.com/NVIDIA/gpu-feature-discovery/
   spec:
     restartPolicy: OnFailure
     runtimeClassName: nvidia
+    nodeSelector:
+      kubernetes.io/hostname: desktop-0xivd7b-wsl
     containers:
     - name: cuda-container
       image: nvcr.io/nvidia/k8s/cuda-sample:nbody
