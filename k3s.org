@@ -18,10 +18,27 @@ If you are in a virtual envirnment, like WSL, the cluster should
 advise the IP address of the hosting environment to the agents. Set
 the ~node-external-ip~ to the hosting machine's IP address.
 
+*** wsl kernel features
+WSL 2 instance network sits behind the host network and require NAT on
+the host to access it. But k8s requires all pods can communicate with
+each other without NAT. So we need a CNI that can bring the WSL
+instance and the other hosts into the same network segment.
+
+There should be many ways to achieve this. In this notebook, I used
+the ~wireguard~ method. It basically creates a VPN and connects all
+the pods in the VPN.
+
 To use ~wireguard-native~, all the nodes must be able to connect
-through a wireguard vpn. This requires the kernels of all the nodes
+through a wireguard VPN. This requires the kernels of *all* the nodes
 have the nesessary kernel features enabled.
 
+#+begin_example
+  CONFIG_NETFILTER_XT_CONNMARK=y
+  CONFIG_NETFILTER_XT_MATCH_CONNMARK=y
+  CONFIG_NETFILTER_XT_TARGET_CONNMARK=y
+#+end_example
+
+** install k3s on server node
 #+name: server-config
 #+begin_src yaml :mkdirp yes :tangle /sudo::/etc/rancher/k3s/config.yaml :comments link
   write-kubeconfig-mode: "0644"
@@ -44,7 +61,7 @@ have the nesessary kernel features enabled.
   yq '.contexts[0].name = "k3s"' /etc/rancher/k3s/k3s.yaml | tee ~/.kube/k3s.yaml
 #+end_src
 
-** agent
+** install k3s on agent node
 #+name: agent-config
 #+begin_src yaml :mkdirp yes :tangle /ssh:gentoo|sudo:gentoo:/etc/rancher/k3s/config.yaml :comments link
   token: k3s-home
