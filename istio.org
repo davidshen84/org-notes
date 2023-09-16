@@ -70,7 +70,7 @@ change log:
             secretName: istio-egressgateway-ca-certs
           type: ClusterIP
         istio-ingressgateway:
-          autoscaleEnabled: true
+          autoscaleEnabled: false
           env: {}
           name: istio-ingressgateway
           secretVolumes:
@@ -185,10 +185,9 @@ change log:
 - ☢️ check k8s context ☢️
 - remove ~dry run~ flag
 #+begin_src shell :noweb yes :results output
-  cat<<EOF | istioctl install --filename - --skip-confirmation 2>&1
+  cat<<EOF | istioctl install --filename - --skip-confirmation --dry-run 2>&1
   <<istio-operator>>
   EOF
-
 #+end_src
 
 ** default gateway

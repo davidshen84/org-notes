@@ -42,6 +42,9 @@
         labels:
           app: registry
       spec:
+        enableServiceLinks: false
+        nodeSelector:
+          node-role.kubernetes.io/master: 'true'
         containers:
           - name: registry
             image: registry:2
@@ -98,9 +101,7 @@
     http:
       - match:
           - uri:
-              prefix: /registry/
-        rewrite:
-          uri: /
+              prefix: /v2/registry/
         route:
           - destination:
               host: registry.default.svc.cluster.local
@@ -109,7 +110,91 @@
 #+end_src
 
 #+begin_src shell :noweb yes
-  cat<<EOF | kubectl apply --namespace default --filename - --dry-run=server
+  cat<<EOF | kubectl apply --namespace default --filename -
   <<registry-service>>
+  EOF
+#+end_src
+
+* docker-registry-browser
+https://hub.docker.com/r/klausmeyer/docker-registry-browser/
+
+#+name: registry-browser
+#+begin_src yaml
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: registry-browser
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: registry-browser
+    template:
+      metadata:
+        labels:
+          app: registry-browser
+      spec:
+        enableServiceLinks: false
+        nodeSelector:
+          node-role.kubernetes.io/master: 'true'
+        containers:
+          - name: registry-browser
+            image: klausmeyer/docker-registry-browser:latest
+            ports:
+              - containerPort: 8080
+            env:
+              - name: RAILS_RELATIVE_URL_ROOT
+                value: /registry-browser/
+              - name: ENABLE_DELETE_IMAGES
+                value: 'true'
+              - name: DOCKER_REGISTRY_URL
+                value: http://registry.default:5000
+  ---
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: registry-browser
+  spec:
+    selector:
+      app: registry-browser
+    ports:
+      - protocol: TCP
+        port: 8080
+        targetPort: 8080
+#+end_src
+
+#+begin_src shell :noweb yes :results output
+  cat<<EOF | kubectl apply --namespace default --filename - --dry-run=server
+  <<registry-browser>>
+  EOF
+#+end_src
+
+#+name: registry-browser-service
+#+begin_src yaml
+  apiVersion: networking.istio.io/v1beta1
+  kind: VirtualService
+  metadata:
+    name: registry-browser
+  spec:
+    hosts:
+      - local.wsl
+    gateways:
+      - default/gateway
+    http:
+      - match:
+          - uri:
+              prefix: /registry-browser/
+        rewrite:
+          uri: /
+        route:
+          - destination:
+              host: registry-browser.default.svc.cluster.local
+              port:
+                number: 8080
+#+end_src
+
+#+begin_src shell :noweb yes :results output
+  cat<<EOF | kubectl apply --namespace default --filename - --dry-run=server
+  <<registry-browser-service>>
   EOF
 #+end_src
