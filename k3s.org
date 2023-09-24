@@ -154,6 +154,10 @@ Install ~helm~ and add these *hel-repo*.
   helm repo update
 #+end_src
 
+#+begin_src shell :results output :wrap src yaml
+  helm show values nvdp/nvidia-device-plugin
+#+end_src
+
 #+name: nvidia-device-plugin-values
 #+begin_src yaml
   runtimeClassName: nvidia
@@ -164,10 +168,10 @@ Install ~helm~ and add these *hel-repo*.
 #+end_src
 
 #+begin_src shell :noweb yes :results output
-  cat<<EOF | helm upgrade --install nvdp \
-                  nvdp/nvidia-device-plugin --version 0.14.1 \
-                  --namespace nvidia-device-plugin --create-namespace \
-                  --values - --dry-run
+  helm upgrade --install nvdp \
+       nvdp/nvidia-device-plugin --version 0.14.1 \
+       --namespace nvidia-device-plugin --create-namespace \
+       --values - --dry-run <<EOF
   <<nvidia-device-plugin-values>>
   EOF
 #+end_src
@@ -187,10 +191,20 @@ https://github.com/NVIDIA/gpu-feature-discovery/
   helm show values nvgfd/gpu-feature-discovery --version 0.8.1
 #+end_src
 
-#+begin_src shell :results output
+#+name: gpu-feature-discovery-values
+#+begin_src yaml
+  nodeSelector:
+    kubernetes.io/hostname: desktop-0xivd7b-wsl
+
+  runtimeClassName: nvidia
+#+end_src
+
+#+begin_src shell :noweb yes :results output
   helm upgrade --install nvgfd \
        nvgfd/gpu-feature-discovery --version 0.8.1 \
-       --namespace gpu-feature-discovery --create-namespace --dry-run
+       --namespace gpu-feature-discovery --create-namespace --values - <<EOF
+  <<gpu-feature-discovery-values>>
+  EOF
 #+end_src
 
 * tests
