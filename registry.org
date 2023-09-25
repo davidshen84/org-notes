@@ -60,6 +60,10 @@
                 value: /var/lib/registry
               - name: REGISTRY_HTTP_SECRET
                 value: secret
+              - name: REGISTRY_LOG_LEVEL
+                value: "info"
+              # - name: REGISTRY_LOG_ACCESSLOG_DISABLED
+              #   value: true
         volumes:
           - name: registry
             persistentVolumeClaim:
@@ -79,7 +83,7 @@
 #+end_src
 
 #+begin_src shell :results verbatim :noweb yes
-  cat<<EOF | kubectl --context k3s --namespace default apply --filename - --dry-run=server
+  kubectl --context k3s --namespace default apply --filename - <<EOF
   <<registry>>
   EOF
 #+end_src
@@ -95,13 +99,15 @@
     name: registry
   spec:
     hosts:
-      - local.wsl
+      - registry.default
     gateways:
       - default/gateway
     http:
-      - match:
-          - uri:
-              prefix: /v2/registry/
+      -
+        match:
+          - port: 80
+        rewrite:
+          authority: registry.default
         route:
           - destination:
               host: registry.default.svc.cluster.local
@@ -110,7 +116,7 @@
 #+end_src
 
 #+begin_src shell :noweb yes
-  cat<<EOF | kubectl apply --namespace default --filename -
+  kubectl apply --namespace default --filename - <<EOF
   <<registry-service>>
   EOF
 #+end_src
@@ -164,7 +170,7 @@ https://hub.docker.com/r/klausmeyer/docker-registry-browser/
 #+end_src
 
 #+begin_src shell :noweb yes :results output
-  cat<<EOF | kubectl apply --namespace default --filename - --dry-run=server
+  kubectl apply --namespace default --filename - --dry-run=server <<EOF
   <<registry-browser>>
   EOF
 #+end_src
@@ -177,7 +183,7 @@ https://hub.docker.com/r/klausmeyer/docker-registry-browser/
     name: registry-browser
   spec:
     hosts:
-      - local.wsl
+      - wsl.local
     gateways:
       - default/gateway
     http:
@@ -194,7 +200,19 @@ https://hub.docker.com/r/klausmeyer/docker-registry-browser/
 #+end_src
 
 #+begin_src shell :noweb yes :results output
-  cat<<EOF | kubectl apply --namespace default --filename - --dry-run=server
+  kubectl apply --namespace default --filename - --dry-run=server <<EOF
   <<registry-browser-service>>
   EOF
+#+end_src
+
+* docker service
+
+Do not use proxy when pushing to this container registry.
+
+**example of setting docker engine proxy**
+#+begin_src conf :tangle /sudo::/etc/systemd/system/docker.service.d/http-proxy.conf :comments link
+  [Service]
+  Environment="HTTP_PROXY=http://localhost:3128"
+  Environment="HTTPS_PROXY=http://localhost:3128"
+  Environment="NO_PROXY=localhost,127.0.0.1,.default,.local,172.20.171.190"
 #+end_src

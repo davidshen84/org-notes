@@ -149,7 +149,7 @@ change log:
       istiodRemote:
         injectionURL: ""
       pilot:
-        autoscaleEnabled: true
+        autoscaleEnabled: false
         autoscaleMax: 5
         autoscaleMin: 1
         configMap: true
@@ -185,9 +185,14 @@ change log:
 - ☢️ check k8s context ☢️
 - remove ~dry run~ flag
 #+begin_src shell :noweb yes :results output
-  cat<<EOF | istioctl install --filename - --skip-confirmation --dry-run 2>&1
+  istioctl install --filename - --skip-confirmation <<EOF
   <<istio-operator>>
   EOF
+#+end_src
+
+** enable istio injection
+#+begin_src shell
+  kubectl label namespace default istio-injection=enabled --overwrite
 #+end_src
 
 ** default gateway
@@ -207,11 +212,12 @@ change log:
           name: http
           protocol: HTTP
         hosts:
-          - local.wsl
+          - "*.local"
+          - "*.default"
 #+end_src
 
 #+begin_src shell :noweb yes
-  cat<<EOF | kubectl apply --filename - --dry-run=server
+  kubectl apply --filename - <<EOF
   <<gateway>>
   EOF
 #+end_src
