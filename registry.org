@@ -151,6 +151,8 @@ https://hub.docker.com/r/klausmeyer/docker-registry-browser/
             env:
               - name: RAILS_RELATIVE_URL_ROOT
                 value: /registry-browser/
+              - name: SCRIPT_NAME
+                value: /registry-browser/
               - name: ENABLE_DELETE_IMAGES
                 value: 'true'
               - name: DOCKER_REGISTRY_URL
