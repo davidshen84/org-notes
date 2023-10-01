@@ -62,6 +62,8 @@
                 value: secret
               - name: REGISTRY_LOG_LEVEL
                 value: "info"
+              - name: REGISTRY_STORAGE_DELETE_ENABLED
+                value: "true"
               # - name: REGISTRY_LOG_ACCESSLOG_DISABLED
               #   value: true
         volumes:
@@ -99,15 +101,15 @@
     name: registry
   spec:
     hosts:
-      - registry.default
+      - wsl.local
     gateways:
       - default/gateway
     http:
       -
         match:
-          - port: 80
-        rewrite:
-          authority: registry.default
+          - uri:
+              prefix: /v2/registry/
+            port: 80
         route:
           - destination:
               host: registry.default.svc.cluster.local

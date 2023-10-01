@@ -54,6 +54,14 @@ have the nesessary kernel features enabled.
   flannel-external-ip: true
 #+end_src
 
+#+name: registry
+#+begin_src yaml :mkdir yes :tangle /sudo::/etc/rancher/k3s/registries.yaml :comments link
+  mirrors:
+    registry.default:
+      endpoint:
+        - "http://registry.default:5000"
+#+end_src
+
 #+begin_src shell :dir /sudo::/root :results output
   curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server" sh -s -
 #+end_src
