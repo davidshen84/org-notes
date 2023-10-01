@@ -267,3 +267,31 @@ https://github.com/NVIDIA/gpu-feature-discovery/
   EOF
 
 #+end_src
+
+#+name: busybox
+#+begin_src yaml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: busybox-pod
+  spec:
+    containers:
+    - name: busybox
+      image: busybox
+      command: ["sleep", "infinity"]
+      volumeMounts:
+      - mountPath: /notebooks
+        name: notebooks
+    volumes:
+    - name: notebooks
+      hostPath:
+        path: /home/david/notebooks
+        type: Directory
+#+end_src
+
+#+begin_src shell :noweb yes :results output
+  kubectl apply -n default -f-<<EOF
+  <<busybox>>
+  EOF
+
+#+end_src
