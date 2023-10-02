@@ -3,7 +3,7 @@
 #+DATE: <2023-08-27 Sun>
 #+STARTUP: showall hideblocks
 
-* readme *please*
+* readme 🙏
 - cofigure your ssh and make sure it is secure
 - some of the code blocks are executed with *root privilege*
 - some of the babel blocks are tangled with *root privilege*
@@ -20,14 +20,14 @@ advise the IP address of the hosting environment to the agents. Set
 the ~node-external-ip~ to the hosting machine's IP address.
 
 *** wsl kernel features
-WSL 2 instance network sits behind the host network and require NAT on
-the host to access it. But k8s requires all pods can communicate with
-each other without NAT. So we need a CNI that can bring the WSL
-instance and the other hosts into the same network segment.
+WSL 2 instances sit behind the host network and require NAT on the
+host to access it. But k8s requires all pods can communicate with each
+other without NAT. So we need a CNI that can bring the WSL instance
+and the other hosts into the same network segment.
 
 There should be many ways to achieve this. In this notebook, I used
-the ~wireguard~ method. It basically creates a VPN and connects all
-the pods in the VPN.
+the ~wireguard~ method provided by the `flannel` CNI. It basically
+creates a VPN and connects all the pods in the VPN.
 
 To use ~wireguard-native~, all the nodes must be able to connect
 through a wireguard VPN. This requires the kernels of *all* the nodes
@@ -70,62 +70,6 @@ have the nesessary kernel features enabled.
   yq '.contexts[0].name = "k3s"' /etc/rancher/k3s/k3s.yaml | tee ~/.kube/k3s.yaml
 #+end_src
 
-*** patch coredns.yaml
-
-Use this patch to disable the ~forward~ instruction in *coredns*.
-
-#+name: coredns-patch
-#+begin_src yaml :tangle kustomization.yaml :comments link
-  apiVersion: kustomize.config.k8s.io/v1beta1
-  kind: Kustomization
-
-  resources:
-    - ./coredns.yaml
-
-  patches:
-    - target:
-        kind: ConfigMap
-        name: coredns
-      patch: |-
-        apiVersion: v1
-        kind: ConfigMap
-        metadata:
-          name: coredns
-          namespace: kube-system
-        data:
-          Corefile: |
-            .:53 {
-                errors
-                health
-                ready
-                kubernetes cluster.local in-addr.arpa ip6.arpa {
-                  pods insecure
-                  fallthrough in-addr.arpa ip6.arpa
-                }
-                hosts /etc/coredns/NodeHosts {
-                  ttl 60
-                  reload 15s
-                  fallthrough
-                }
-                prometheus :9153
-                cache 30
-                loop
-                reload
-                loadbalance
-                import /etc/coredns/custom/*.override
-            }
-            import /etc/coredns/custom/*.server
-#+end_src
-
-#+begin_src shell :dir /sudo::/home/david/github/org-notes
-  cp /var/lib/rancher/k3s/server/manifests/coredns.yaml .
-  chown david:david coredns.yaml
-#+end_src
-
-#+begin_src shell :wrap src yaml :results output
-  kubectl kustomize 
-#+end_src
-
 ** install k3s on agent node
 #+name: agent-config
 #+begin_src yaml :mkdirp yes :tangle /ssh:gentoo|sudo:gentoo:/etc/rancher/k3s/config.yaml :comments link
@@ -155,7 +99,7 @@ https://github.com/NVIDIA/k8s-device-plugin/
 
 You need to install [[https://github.com/NVIDIA/k8s-device-plugin/#install-the-nvidia-container-toolkit][the toolkit]] first.
 
-Install ~helm~ and add these *hel-repo*.
+Install ~helm~ and add these *helm-repo*.
 #+begin_src shell :results output
   helm repo add nvdp https://nvidia.github.io/k8s-device-plugin
   helm repo add nvgfd https://nvidia.github.io/gpu-feature-discovery

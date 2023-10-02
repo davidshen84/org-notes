@@ -1,6 +1,9 @@
 #+TITLE: istio
 #+STARTUP: showall hideblocks
 
+* tasks [0/1]
+- [ ] add ssl
+
 * istio
 https://istio.io/
 
@@ -215,4 +218,3 @@ change log:
   <<gateway>>
   EOF
 #+end_src
-
