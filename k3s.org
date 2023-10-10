@@ -112,11 +112,29 @@ Install ~helm~ and add these *helm-repo*.
 
 #+name: nvidia-device-plugin-values
 #+begin_src yaml
+  config:
+    map:
+      default: |
+        version: v1
+        flags:
+          migStrategy: none
+        sharing:
+          timeSlicing:
+            renameByDefault: true
+            failRequestsGreaterThanOne: false
+            resources:
+              - name: nvidia.com/gpu
+                replicas: 4
+    default: "default"
+
   runtimeClassName: nvidia
 
   image:
     repository: registry.gitlab.com/nvidia/kubernetes/device-plugin/staging/k8s-device-plugin
     tag: "8b416016"
+
+  gfd:
+    enabled: true
 #+end_src
 
 #+begin_src shell :noweb yes :results output
