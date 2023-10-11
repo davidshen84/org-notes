@@ -1,0 +1,148 @@
+#+TITLE: nvidia container toolkit notes
+#+AUTHOR: David S.
+#+DATE: <2023-10-11 Wed>
+#+STARTUP: showall hideblocks
+
+* container toolkit
+https://github.com/NVIDIA/nvidia-container-toolkit
+
+The official document works well with Ubuntu.
+
+* k8s configuration
+https://docs.k3s.io/advanced#nvidia-container-runtime-support
+
+Only install this component on the *server* side.
+
+#+begin_src yaml :tangle /sudo::/var/lib/rancher/k3s/server/manifests/nvidia-runtime-class.yaml
+  apiVersion: node.k8s.io/v1
+  kind: RuntimeClass
+  metadata:
+    name: nvidia
+  handler: nvidia
+#+end_src
+
+** k8s-device-plugin
+https://github.com/NVIDIA/k8s-device-plugin/
+
+You need to install [[https://github.com/NVIDIA/k8s-device-plugin/#install-the-nvidia-container-toolkit][the toolkit]] first.
+
+Install ~helm~ and add these *helm-repo*.
+#+begin_src shell :results output
+  helm repo add nvdp https://nvidia.github.io/k8s-device-plugin
+  helm repo add nvgfd https://nvidia.github.io/gpu-feature-discovery
+  helm repo update
+#+end_src
+
+#+begin_src shell :results output :wrap src yaml
+  helm show values nvdp/nvidia-device-plugin --version 0.14.1
+#+end_src
+
+#+name: nvidia-device-plugin-values
+#+begin_src yaml
+  config:
+    map:
+      default: |
+        version: v1
+        flags:
+          migStrategy: none
+        sharing:
+          timeSlicing:
+            renameByDefault: true
+            failRequestsGreaterThanOne: false
+            resources:
+              - name: nvidia.com/gpu
+                replicas: 4
+    default: "default"
+
+  runtimeClassName: nvidia
+
+  image:
+    repository: registry.gitlab.com/nvidia/kubernetes/device-plugin/staging/k8s-device-plugin
+    tag: "8b416016"
+
+  gfd:
+    enabled: true
+#+end_src
+
+#+begin_src shell :noweb yes :results output
+  helm upgrade --install nvdp \
+       nvdp/nvidia-device-plugin --version 0.14.1 \
+       --namespace nvidia-device-plugin --create-namespace \
+       --values - --dry-run <<EOF
+  <<nvidia-device-plugin-values>>
+  EOF
+#+end_src
+
+*** wsl fix
+
+~gfd~ won't discover a node running in wsl because wsl does not expose
+the correct hardware information through the ~/sys~ filesystem. But we
+can for ~gfd~ using the ~nvidia.com/gpu.present~ node label.
+
+#+begin_src shell
+  kubectl label nodes desktop-0xivd7b-wsl nvidia.com/gpu.present="true"
+#+end_src
+
+** gpu-feature-discovery
+https://github.com/NVIDIA/gpu-feature-discovery/
+
+If ~gfd/enabled~ is ~true~ in the device plugin configuration, you
+don't need to install this chart.
+
+#+begin_src shell
+  helm search repo nvgfd
+#+end_src
+
+#+begin_src shell :results output :wrap src yaml
+  helm show values nvgfd/gpu-feature-discovery --version 0.8.1
+#+end_src
+
+#+name: gpu-feature-discovery-values
+#+begin_src yaml
+  nodeSelector:
+    kubernetes.io/hostname: desktop-0xivd7b-wsl
+
+  runtimeClassName: nvidia
+#+end_src
+
+#+begin_src shell :noweb yes :results output
+  helm upgrade --install nvgfd \
+       nvgfd/gpu-feature-discovery --version 0.8.1 \
+       --namespace gpu-feature-discovery --create-namespace --values - <<EOF
+  <<gpu-feature-discovery-values>>
+  EOF
+#+end_src
+
+* test
+
+#+name: gpu-test
+#+begin_src yaml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: nbody-gpu-benchmark
+    namespace: default
+  spec:
+    restartPolicy: OnFailure
+    runtimeClassName: nvidia
+    nodeSelector:
+      kubernetes.io/hostname: desktop-0xivd7b-wsl
+    containers:
+    - name: cuda-container
+      image: nvcr.io/nvidia/k8s/cuda-sample:nbody
+      args: ["nbody", "-gpu", "-benchmark"]
+      resources:
+        limits:
+          nvidia.com/gpu: 1
+      env:
+      - name: NVIDIA_VISIBLE_DEVICES
+        value: all
+      - name: NVIDIA_DRIVER_CAPABILITIES
+        value: all
+#+end_src
+
+#+begin_src shell :noweb yes results: output
+  cat<<EOF | kubectl apply -f - --dry-run=client
+  <<gpu-test>>
+  EOF
+#+end_src
