@@ -77,7 +77,8 @@ Install ~helm~ and add these *helm-repo*.
 
 ~gfd~ won't discover a node running in wsl because wsl does not expose
 the correct hardware information through the ~/sys~ filesystem. But we
-can for ~gfd~ using the ~nvidia.com/gpu.present~ node label.
+can force ~gfd~ to discover the node using the
+~nvidia.com/gpu.present~ node label.
 
 #+begin_src shell
   kubectl label nodes desktop-0xivd7b-wsl nvidia.com/gpu.present="true"
